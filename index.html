@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=0"
+    />
+    <meta
+      name="description"
+      content="在线重定向Github链接，支持API、Git Clone、Releases、Archive、Gist、Raw 文件代理加速下载服务"
+    />
+    <meta
+      name="keywords"
+      content="github,mirror,github mirror,github镜像,github加速,github下载,github下载加速,github文件加速,镜像加速,加速下载"
+    />
+    <meta name="language" content="zh-CN" />
+    <title>Github Mirror 镜像加速</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <style>
+      /* 基础样式 */
+      :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9fafb;
+        --bg-tertiary: #f3f4f6;
+        --text-primary: #111827;
+        --text-secondary: #4b5563;
+        --accent: #3b82f6;
+        --accent-hover: #2563eb;
+        --border: #e5e7eb;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --error: #ef4444;
+      }
+
+      .dark {
+        --bg-primary: #111827;
+        --bg-secondary: #1f2937;
+        --bg-tertiary: #374151;
+        --text-primary: #f9fafb;
+        --text-secondary: #9ca3af;
+        --border: #4b5563;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+          Arial, sans-serif;
+      }
+
+      body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.5;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      /* 头部样式 */
+      header {
+        background-color: var(--bg-primary);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-decoration: none;
+      }
+
+      .logo i {
+        color: var(--accent);
+      }
+
+      .logo-icon {
+        /* 浅色模式下显示黑色 */
+        filter: none;
+      }
+
+      .dark .logo-icon {
+        filter: invert(1) brightness(1.5);
+      }
+
+      nav ul {
+        display: flex;
+        list-style: none;
+        gap: 20px;
+      }
+
+      nav a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+      }
+
+      nav a:hover {
+        color: var(--accent);
+      }
+
+      /* 主要内容区域 */
+      main {
+        flex-grow: 1;
+        padding: 40px 0;
+      }
+
+      .hero {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .hero h1 {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+
+      .hero h1 span {
+        color: var(--accent);
+      }
+
+      .hero p {
+        font-size: 16px;
+        color: var(--text-secondary);
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      /* 转换器样式 */
+      .converter {
+        background-color: var(--bg-secondary);
+        border-radius: 8px;
+        padding: 24px;
+        margin: 30px auto;
+        max-width: 800px;
+        border: 1px solid var(--border);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .input-group {
+        display: flex;
+        margin-bottom: 16px;
+      }
+
+      .input-group input {
+        flex: 1;
+        padding: 12px 16px;
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: 6px 0 0 6px;
+        color: var(--text-primary);
+        font-size: 16px;
+      }
+
+      .input-group input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      }
+
+      .input-group button {
+        padding: 12px 24px;
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 0 6px 6px 0;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .input-group button:hover {
+        background-color: var(--accent-hover);
+      }
+
+      /* 结果区域 */
+      .result {
+        display: none;
+        background-color: var(--bg-primary);
+        border-radius: 6px;
+        padding: 16px;
+        margin-top: 16px;
+        border: 1px solid var(--border);
+      }
+
+      .result.show {
+        display: block;
+      }
+
+      .result-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+
+      .result-url {
+        font-size: 16px;
+        word-break: break-all;
+        padding: 8px 12px;
+        background-color: var(--bg-tertiary);
+        border-radius: 4px;
+        border: 1px solid var(--border);
+      }
+
+      .result-actions {
+        display: none;
+        margin-top: 12px;
+        gap: 12px;
+      }
+
+      .result.show ~ .result-actions {
+        display: flex;
+      }
+
+      .result-actions button {
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .visit-btn {
+        background-color: var(--accent);
+        color: white;
+      }
+
+      .visit-btn:hover {
+        background-color: var(--accent-hover);
+      }
+
+      .copy-btn {
+        background-color: var(--bg-tertiary);
+        color: var(--text-primary);
+      }
+
+      .copy-btn:hover {
+        background-color: var(--border);
+      }
+
+      /* 示例链接 */
+      .examples {
+        margin-top: 20px;
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+
+      .examples-title {
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+
+      .example-link {
+        display: block;
+        margin: 0 auto 10px;
+        padding: 6px 0;
+        color: var(--accent);
+        cursor: pointer;
+        text-decoration: underline;
+        max-width: 90%;
+        word-break: break-all;
+        overflow-wrap: break-word;
+      }
+
+      .example-link:hover {
+        color: var(--accent-hover);
+        background-color: var(--bg-tertiary);
+        border-radius: 4px;
+      }
+
+      /* 提示信息 */
+      .info-box {
+        background-color: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin-top: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .info-box i {
+        color: #f59e0b;
+        margin-top: 2px;
+      }
+
+      .info-box p {
+        font-size: 14px;
+        color: #9a3412;
+      }
+
+      /* 域名映射表格 */
+      .domains-section {
+        padding: 60px 0;
+        background-color: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+      }
+
+      .section-title {
+        font-size: 24px;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      footer .section-title {
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+
+      .domains-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+        margin-top: 30px;
+      }
+
+      .domain-card {
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 16px;
+        transition: transform 0.2s, border-color 0.2s;
+      }
+
+      .domain-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent);
+      }
+
+      .domain-original {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-primary);
+      }
+
+      .domain-mapped {
+        color: var(--accent);
+        font-size: 14px;
+      }
+
+      /* 使用说明 */
+      .domains-section {
+        padding: 60px 0;
+        background-color: var(--bg-primary);
+        border-top: 1px solid var(--border);
+        display: none; /* 默认隐藏 */
+      }
+
+      .info-section {
+        padding: 20px 0;
+        background-color: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 15px;
+      }
+
+      .info-card {
+        background-color: var(--bg-secondary);
+        border-radius: 6px;
+        padding: 15px;
+        border: 1px solid var(--border);
+      }
+
+      .info-card h3 {
+        margin-bottom: 10px;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+      }
+
+      .info-card ul {
+        list-style: none;
+      }
+
+      .info-card li {
+        margin-bottom: 5px;
+        padding-left: 15px;
+        position: relative;
+        font-size: 13px;
+      }
+
+      .info-card li:before {
+        content: "•";
+        color: var(--accent);
+        position: absolute;
+        left: 0;
+      }
+
+      /* 页脚 */
+      footer {
+        background-color: var(--bg-secondary);
+        border-top: 1px solid var(--border);
+        padding: 20px 0;
+        color: var(--text-secondary);
+        font-size: 14px;
+      }
+
+      .footer-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+      }
+
+      .footer-left {
+        text-align: left;
+        flex: 3;
+        padding-right: 40px;
+      }
+
+      .footer-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: flex-start;
+        padding-top: 20px;
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .footer-links {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 12px;
+        width: 100%;
+      }
+
+      .footer-links a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        padding: 5px 10px;
+        width: 100%;
+        text-align: right;
+      }
+
+      .footer-links a:hover {
+        color: var(--text-primary);
+      }
+
+      .copyright {
+        text-align: center;
+        border-top: 1px solid var(--border);
+        padding-top: 10px;
+      }
+
+      @media (max-width: 768px) {
+        .footer-content {
+          flex-direction: column;
+        }
+
+        .footer-right {
+          align-items: center;
+          margin-top: 15px;
+        }
+
+        .footer-links {
+          flex-direction: row;
+          align-items: center;
+        }
+      }
+
+      /* 通知 */
+      .notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: var(--success);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: none;
+        z-index: 1000;
+      }
+
+      .notification.show {
+        display: block;
+        animation: fadeInOut 3s forwards;
+      }
+
+      @keyframes fadeInOut {
+        0% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        20% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        80% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+      }
+
+      /* 移动端菜单按钮 */
+      .mobile-menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 24px;
+        cursor: pointer;
+        padding: 5px;
+      }
+
+      /* 桌面端样式 */
+      @media (min-width: 769px) {
+        .header-controls {
+          position: absolute;
+          right: 20px;
+        }
+
+        .mobile-menu-btn {
+          display: none;
+        }
+
+        nav {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+      }
+
+      /* 移动端适配 */
+      @media (max-width: 768px) {
+        .header-content {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .mobile-menu-btn {
+          display: block;
+          z-index: 101;
+        }
+
+        nav {
+          position: fixed;
+          top: 60px;
+          right: 20px;
+          width: 200px;
+          background-color: var(--bg-secondary);
+          border-radius: 10px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(-10px);
+          transition: all 0.3s ease;
+          z-index: 100;
+        }
+
+        nav.active {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
+
+        nav ul {
+          flex-direction: column;
+          padding: 15px;
+          gap: 15px;
+        }
+
+        nav ul li {
+          width: 100%;
+        }
+
+        nav a {
+          display: block;
+          padding: 10px 0;
+          font-size: 16px;
+        }
+
+        nav::before {
+          content: "";
+          position: absolute;
+          top: -8px;
+          right: 15px;
+          width: 16px;
+          height: 16px;
+          background-color: var(--bg-secondary);
+          transform: rotate(45deg);
+          z-index: -1;
+        }
+
+        .hero h1 {
+          font-size: 36px;
+        }
+
+        .hero p {
+          font-size: 16px;
+        }
+
+        .input-group {
+          flex-direction: column;
+        }
+
+        .input-group input {
+          border-radius: 6px;
+          margin-bottom: 10px;
+        }
+
+        .input-group button {
+          border-radius: 6px;
+        }
+
+        .domains-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* 头部控制区域 */
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      /* 暗黑模式切换按钮 */
+      .theme-toggle {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        color: var(--text-secondary);
+        font-size: 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="header-content">
+          <a href="/" class="logo">
+            <img
+              src="https://cdn.akams.cn/images/OcticonOctoface16.svg"
+              alt="GitHub Logo"
+              width="28"
+              height="28"
+              class="logo-icon"
+            />
+            <span>Github Mirror</span>
+          </a>
+          <div class="header-controls">
+            <button
+              id="theme-toggle"
+              class="theme-toggle"
+              aria-label="切换主题"
+            >
+              <i class="fas fa-moon"></i>
+            </button>
+            <button
+              id="mobile-menu-btn"
+              class="mobile-menu-btn"
+              aria-label="打开菜单"
+              onclick="toggleMobileMenu()"
+            >
+              <i class="fas fa-bars"></i>
+            </button>
+          </div>
+          <nav>
+            <ul id="nav-menu">
+              <li><a href="#converter">链接转换</a></li>
+              <li><a href="#domains">域名列表</a></li>
+              <li><a href="#info">使用说明</a></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <div class="hero" id="converter">
+          <h1>Github <span>Proxy</span></h1>
+          <p>
+            支持GitHub （Git Clone、Releases、Archive、Gist、Raw）
+            文件加速访问，提升下载体验。
+          </p>
+        </div>
+
+        <div class="converter">
+          <div class="input-group">
+            <input
+              type="text"
+              id="github-url"
+              placeholder="输入GitHub链接，例如：github.com/username/repository"
+            />
+            <button id="convert-btn">转换链接</button>
+          </div>
+          <div class="examples" style="text-align: center">
+            <div class="examples-title">示例：</div>
+            <div class="example-link" data-url="github.com/geekertao/github">
+              github.com/geekertao/github
+            </div>
+            <div
+              class="example-link"
+              data-url="https://github.com/microsoft/vscode"
+            >
+              https://github.com/microsoft/vscode
+            </div>
+            <div
+              class="example-link"
+              data-url="raw.githubusercontent.com/Geekertao/Github/main/README.md"
+            >
+              raw.githubusercontent.com/Geekertao/Github/main/README.md
+            </div>
+          </div>
+          <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <p>公益服务，请勿滥用。</p>
+          </div>
+          <div class="result" id="result">
+            <div class="result-label">转换后的链接：</div>
+            <div class="result-url" id="converted-url"></div>
+          </div>
+          <div class="result-actions" id="result-actions">
+            <button class="visit-btn" id="visit-btn" disabled>
+              <i class="fas fa-external-link-alt"></i> 访问
+            </button>
+            <button class="copy-btn" id="copy-btn">
+              <i class="far fa-copy"></i> 复制
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <section class="domains-section" id="domains">
+        <div class="container">
+          <h2 class="section-title">支持的域名映射</h2>
+          <div class="domains-grid" id="domains-grid">
+            <!-- 域名列表将通过JavaScript动态生成 -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-left">
+            <div id="info" class="info-section">
+              <h2 class="section-title">使用说明</h2>
+              <div class="info-grid">
+                <div class="info-card">
+                  <h3><i class="fas fa-info-circle"></i> 关于服务</h3>
+                  <p>
+                    Github
+                    Proxy是一个GitHub反向代理服务，通过域名映射技术，将GitHub相关资源请求重定向到镜像服务器，提升访问速度和稳定性。
+                  </p>
+                </div>
+                <div class="info-card">
+                  <h3><i class="fas fa-cogs"></i> 如何使用</h3>
+                  <ul>
+                    <li>在输入框中粘贴GitHub链接</li>
+                    <li>支持完整URL和简写形式</li>
+                    <li>点击"转换链接"按钮</li>
+                    <li>复制转换后的链接使用</li>
+                    <li>或直接访问转换后的链接</li>
+                  </ul>
+                </div>
+                <div class="info-card">
+                  <h3><i class="fas fa-exclamation-triangle"></i> 注意事项</h3>
+                  <ul>
+                    <li>支持不带协议的简写链接</li>
+                    <li>部分路径会重定向到本页面</li>
+                    <li>部分高级功能受限</li>
+                    <li>不支持访问私有仓库</li>
+                    <li>请遵守GitHub服务条款</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="footer-right">
+            <div class="footer-links">
+              <a href="https://status.geekertao.top/status/github">服务状态</a>
+              <a href="mailto:geekertao@geekertao.top">联系我们</a>
+            </div>
+          </div>
+        </div>
+        <p class="copyright">&copy; 2025 Github Mirror - GitHub链接转换服务</p>
+      </div>
+    </footer>
+
+    <div class="notification" id="notification">链接已复制到剪贴板！</div>
+
+    <script>
+      // 域名映射配置
+      const domainMappings = {
+        "github.com": "gh.",
+        "avatars.githubusercontent.com": "avatars-githubusercontent-com.",
+        "github.githubassets.com": "github-githubassets-com.",
+        "collector.github.com": "collector-github-com.",
+        "api.github.com": "api-github-com.",
+        "raw.githubusercontent.com": "raw-githubusercontent-com.",
+        "gist.githubusercontent.com": "gist-githubusercontent-com.",
+        "github.io": "github-io.",
+        "assets-cdn.github.com": "assets-cdn-github-com.",
+        "cdn.jsdelivr.net": "cdn.jsdelivr-net.",
+        "securitylab.github.com": "securitylab-github-com.",
+        "www.githubstatus.com": "www-githubstatus-com.",
+        "npmjs.com": "npmjs-com.",
+        "git-lfs.github.com": "git-lfs-github-com.",
+        "githubusercontent.com": "githubusercontent-com.",
+        "github.global.ssl.fastly.net": "github-global-ssl-fastly-net.",
+        "api.npms.io": "api-npms-io.",
+        "github.community": "github-community.",
+      };
+
+      // DOM元素
+      const githubUrlInput = document.getElementById("github-url");
+      const convertBtn = document.getElementById("convert-btn");
+      const resultDiv = document.getElementById("result");
+      const convertedUrlDiv = document.getElementById("converted-url");
+      const copyBtn = document.getElementById("copy-btn");
+      const visitBtn = document.getElementById("visit-btn");
+      const notification = document.getElementById("notification");
+      const domainsGrid = document.getElementById("domains-grid");
+      const exampleLinks = document.querySelectorAll(".example-link");
+      const themeToggle = document.getElementById("theme-toggle");
+
+      // 处理section显示和跳转
+      document.addEventListener("DOMContentLoaded", function () {
+        // 获取所有带有href="#section-id"的链接
+        const sectionLinks = document.querySelectorAll(
+          'a[href^="#domains"], a[href^="#info"]'
+        );
+
+        sectionLinks.forEach((link) => {
+          link.addEventListener("click", function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute("href").substring(1);
+            const targetSection = document.getElementById(targetId);
+
+            if (targetSection) {
+              // 显示目标section
+              targetSection.style.display = "block";
+
+              // 滚动到目标位置
+              targetSection.scrollIntoView({
+                behavior: "smooth",
+              });
+            }
+          });
+        });
+      });
+
+      // 初始化域名列表
+      function initDomainsList() {
+        for (const [original, mapped] of Object.entries(domainMappings)) {
+          const domainCard = document.createElement("div");
+          domainCard.className = "domain-card";
+          domainCard.innerHTML = `
+                    <div class="domain-original">${original}</div>
+                    <div class="domain-mapped">→ ${mapped}gitmirror.top</div>
+                `;
+          domainsGrid.appendChild(domainCard);
+        }
+      }
+
+      // 转换链接
+      function convertUrl(originalUrl) {
+        try {
+          let urlToParse = originalUrl;
+          if (
+            !urlToParse.startsWith("http://") &&
+            !urlToParse.startsWith("https://")
+          ) {
+            urlToParse = "https://" + urlToParse;
+          }
+
+          const url = new URL(urlToParse);
+          const originalHost = url.hostname;
+
+          // 精确匹配
+          if (domainMappings[originalHost]) {
+            const mappedHost = domainMappings[originalHost] + "gitmirror.top";
+            url.hostname = mappedHost;
+            return url.toString();
+          }
+
+          // 子域名处理
+          for (const [domain, prefix] of Object.entries(domainMappings)) {
+            if (originalHost.endsWith("." + domain)) {
+              const subdomain = originalHost.slice(0, -(domain.length + 1));
+              const safeSubdomain = subdomain.replace(/\./g, "-");
+              const mappedHost =
+                safeSubdomain +
+                "-" +
+                prefix.replace(/\.$/, "") +
+                ".gitmirror.top";
+              url.hostname = mappedHost;
+              return url.toString();
+            }
+          }
+
+          return null; // 无匹配
+        } catch (e) {
+          console.error("URL转换错误:", e);
+          return null;
+        }
+      }
+
+      // 显示结果
+      function showResult(convertedUrl) {
+        if (convertedUrl) {
+          convertedUrlDiv.textContent = convertedUrl;
+          resultDiv.classList.add("show");
+          visitBtn.disabled = false;
+        } else {
+          alert("无法转换此链接，请检查链接格式或域名是否受支持。");
+          visitBtn.disabled = true;
+        }
+      }
+
+      // 复制到剪贴板
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          notification.classList.add("show");
+          setTimeout(() => {
+            notification.classList.remove("show");
+          }, 3000);
+        });
+      }
+
+      // 暗黑模式切换
+      function toggleTheme() {
+        document.body.classList.toggle("dark");
+        const isDark = document.body.classList.contains("dark");
+
+        // 更新图标
+        if (isDark) {
+          themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        } else {
+          themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+        }
+
+        // 保存用户偏好
+        localStorage.setItem("darkMode", isDark ? "enabled" : "disabled");
+      }
+
+      // 检查用户之前的主题偏好
+      function checkThemePreference() {
+        if (
+          localStorage.getItem("darkMode") === "enabled" ||
+          (window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches &&
+            !localStorage.getItem("darkMode"))
+        ) {
+          document.body.classList.add("dark");
+          themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+      }
+
+      // 事件监听
+      convertBtn.addEventListener("click", () => {
+        const originalUrl = githubUrlInput.value.trim();
+        if (originalUrl) {
+          const convertedUrl = convertUrl(originalUrl);
+          showResult(convertedUrl);
+        } else {
+          alert("请输入GitHub链接");
+        }
+      });
+
+      // 监听输入框回车键
+      githubUrlInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          convertBtn.click();
+        }
+      });
+
+      copyBtn.addEventListener("click", () => {
+        const url = convertedUrlDiv.textContent;
+        if (url) copyToClipboard(url);
+      });
+
+      visitBtn.addEventListener("click", () => {
+        const url = convertedUrlDiv.textContent;
+        if (url) window.open(url, "_blank", "noopener,noreferrer");
+      });
+
+      themeToggle.addEventListener("click", toggleTheme);
+
+      // 示例链接点击
+      exampleLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          const url = link.getAttribute("data-url");
+          githubUrlInput.value = url;
+          showResult(convertUrl(url));
+        });
+      });
+
+      // 移动端菜单交互
+      function toggleMobileMenu() {
+        const nav = document.querySelector("nav");
+        const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+
+        nav.classList.toggle("active");
+
+        // 切换菜单图标
+        const icon = mobileMenuBtn.querySelector("i");
+        if (nav.classList.contains("active")) {
+          icon.classList.remove("fa-bars");
+          icon.classList.add("fa-times");
+        } else {
+          icon.classList.remove("fa-times");
+          icon.classList.add("fa-bars");
+        }
+      }
+
+      function initMobileMenu() {
+        const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+        const nav = document.querySelector("nav");
+        const navLinks = document.querySelectorAll("#nav-menu a");
+
+        // 直接在HTML中添加onclick属性
+        mobileMenuBtn.setAttribute("onclick", "toggleMobileMenu()");
+
+        // 点击链接后关闭菜单
+        navLinks.forEach((link) => {
+          link.addEventListener("click", () => {
+            nav.classList.remove("active");
+            const icon = mobileMenuBtn.querySelector("i");
+            icon.classList.remove("fa-times");
+            icon.classList.add("fa-bars");
+          });
+        });
+
+        // 点击页面其他区域关闭菜单
+        document.addEventListener("click", (e) => {
+          if (
+            !nav.contains(e.target) &&
+            e.target !== mobileMenuBtn &&
+            !mobileMenuBtn.contains(e.target)
+          ) {
+            nav.classList.remove("active");
+            const icon = mobileMenuBtn.querySelector("i");
+            icon.classList.remove("fa-times");
+            icon.classList.add("fa-bars");
+          }
+        });
+      }
+
+      // 初始化
+      document.addEventListener("DOMContentLoaded", () => {
+        initDomainsList();
+        checkThemePreference();
+        initMobileMenu();
+      });
+    </script>
+  </body>
+</html>
